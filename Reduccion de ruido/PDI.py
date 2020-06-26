@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random as rdm
+import json
 
 plt.rcParams['image.cmap'] = 'gray'
-
 
 # size = (40, 40)
 #
@@ -72,7 +72,7 @@ def crearMatrizRandom(m, n):
     matriz = np.zeros((m, n))
     for x in range(0, m):
         for y in range(0, n):
-            matriz[x, y] = rdm.randrange(0, 100, 10)
+            matriz[x, y] = rdm.randrange(10, 100, 10)
     return matriz
 
 
@@ -96,16 +96,17 @@ def quitarRuido(img):
                         m + 1, n + 1] + img[m + 1, n - 1] + img[m - 1, n + 1] + img[m, n]), 9)
 
             if m == 0 and 1 <= n <= len(img) - 2:
-                img[m, n] = resultadoDiv((img[m, n - 1] + img[m + 1, n] + img[m, n + 1] + img[
-                    m + 1, n + 1] + img[m + 1, n - 1] + img[m, n]), 6)
+                img[m, n] = resultadoDiv(
+                    (img[m, n - 1] + img[m + 1, n] + img[m, n + 1] + img[m + 1, n + 1] + img[m + 1, n - 1] + img[m, n]),
+                    6)
 
             if n == 0 and 1 <= m <= len(img) - 2:
-                img[m, n] = resultadoDiv((img[m - 1, n] + img[m + 1, n] + img[m, n + 1] + img[
-                    m + 1, n + 1] + img[m - 1, n + 1] + img[m, n]), 6)
+                img[m, n] = resultadoDiv(
+                    (img[m - 1, n] + img[m + 1, n] + img[m, n + 1] + img[m + 1, n + 1] + img[m - 1, n + 1] + img[m, n]),
+                    6)
 
             if n == 0 and m == 0:
-                img[m, n] = resultadoDiv((img[m + 1, n] + img[m, n + 1] + img[
-                    m + 1, n + 1] + img[m, n]), 4)
+                img[m, n] = resultadoDiv((img[m + 1, n] + img[m, n + 1] + img[m + 1, n + 1] + img[m, n]), 4)
 
             if m == len(img) - 1 and n == 0:
                 img[m, n] = resultadoDiv((img[m - 1, n] + img[m, n + 1] + img[m - 1, n + 1] + img[m, n]), 4)
@@ -128,13 +129,52 @@ def quitarRuido(img):
     return img
 
 
+def escribirMatrizArchivoJson(matriz, nombreArchivo, clave):
+    archivo = '{"' + str(clave) + '": []}'
+    o = json.loads(archivo)
+    o[str(clave)] = matriz.tolist()
+    with open(nombreArchivo + '.json', 'w') as file:
+        json.dump(o, file, indent=4)
+
+
+def leerMatrizDeArchivoJson(nombreArchivo, claveParaAsignar):
+    with open(nombreArchivo + '.json') as file:
+        data = json.load(file)
+        data = np.array(data[str(claveParaAsignar)])
+    return data
+
+
+def cambiarPorSimbolos(matriz):
+    simbolos = ['@', '#', '&', '%', '?', '|', '=', '"', ':', ' ']
+    size = len(matriz)
+    matrizSimbolos = []
+    for x in range(0, len(matriz) ):
+        for y in range(0, len(matriz) ):
+            indice = matriz[x][y] // 10
+            indice = np.int(indice)
+            print(simbolos[indice], end=' ')
+           # matrizSimbolos[x][y] = simbolos[indice]
+
+        print()
+
+def imprimirMatriz(matriz):
+    for x in range(0, len(matriz)):
+        for y in range(0, len(matriz)):
+            print(matriz[x][y], end=' ')
+        print()
+
 imagen = crearMatrizRandom(30, 30)
 imagen[10:-10, 10:-10] = 1
-print(imagen)
+
+escribirMatrizArchivoJson(imagen, 'imagenInicial', 'data')
+archivoLeido = leerMatrizDeArchivoJson('imagenInicial', 'data')
+
+
 
 plt.imshow(imagen)
 
-imagen = quitarRuido(imagen)
-print(imagen)
+imagen = quitarRuido(archivoLeido)
+escribirMatrizArchivoJson(imagen, 'imagenFunRuido', 'data')
+cambiarPorSimbolos(imagen)
 plt.figure()
 plt.imshow(imagen)
